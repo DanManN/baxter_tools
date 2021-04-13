@@ -50,8 +50,7 @@ def list_cameras(*_args, **_kwds):
         # Find open (publishing) cameras
         master = rosgraph.Master('/rostopic')
         resp.cameras
-        cam_topics = dict([(cam, "/cameras/%s/image" % cam)
-                               for cam in resp.cameras])
+        cam_topics = dict([(cam, "/cameras/%s/image" % cam) for cam in resp.cameras])
         open_cams = dict([(cam, False) for cam in resp.cameras])
         try:
             topics = master.getPublishedTopics('')
@@ -64,7 +63,7 @@ def list_cameras(*_args, **_kwds):
         for cam in resp.cameras:
             print("%s%s" % (cam, ("  -  (open)" if open_cams[cam] else "")))
     else:
-        print ('No cameras found')
+        print('No cameras found')
 
 
 def reset_cameras(*_args, **_kwds):
@@ -97,30 +96,18 @@ def close_camera(camera, *_args, **_kwds):
 
 def main():
     str_res = ["%rx%r" % (r[0], r[1]) for r in CameraController.MODES]
-    fmt_res = ("Valid resolutions:\n[" +
-              ("%s, " * (len(CameraController.MODES) - 1)) + "%s]")
+    fmt_res = ("Valid resolutions:\n[" + ("%s, " * (len(CameraController.MODES) - 1)) + "%s]")
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=(fmt_res % tuple(str_res))
+        formatter_class=argparse.RawDescriptionHelpFormatter, epilog=(fmt_res % tuple(str_res))
     )
     action_grp = parser.add_mutually_exclusive_group(required=True)
-    action_grp.add_argument(
-        '-o', '--open', metavar='CAMERA', help='Open specified camera'
-    )
+    action_grp.add_argument('-o', '--open', metavar='CAMERA', help='Open specified camera')
     parser.add_argument(
-        '-r', '--resolution', metavar='[X]x[Y]', default='1280x800',
-        help='Set camera resolution (default: 1280x800)'
+        '-r', '--resolution', metavar='[X]x[Y]', default='1280x800', help='Set camera resolution (default: 1280x800)'
     )
-    action_grp.add_argument(
-        '-c', '--close', metavar='CAMERA', help='Close specified camera'
-    )
-    action_grp.add_argument(
-        '-l', '--list', action='store_true', help='List available cameras'
-    )
-    action_grp.add_argument(
-        '-e', '--enumerate', action='store_true',
-        help='Clear and re-enumerate connected devices'
-    )
+    action_grp.add_argument('-c', '--close', metavar='CAMERA', help='Close specified camera')
+    action_grp.add_argument('-l', '--list', action='store_true', help='List available cameras')
+    action_grp.add_argument('-e', '--enumerate', action='store_true', help='Clear and re-enumerate connected devices')
     args = parser.parse_args(rospy.myargv()[1:])
 
     action = None
@@ -134,12 +121,11 @@ def main():
         camera = args.open
         lres = args.resolution.split('x')
         if len(lres) != 2:
-            print fmt_res % tuple(str_res)
+            print(fmt_res % tuple(str_res))
             parser.error("Invalid resolution format: %s. Use (X)x(Y).")
         res = (int(lres[0]), int(lres[1]))
-        if not any((res[0] == r[0] and res[1] == r[1])
-                   for r in CameraController.MODES):
-            print fmt_res % tuple(str_res)
+        if not any((res[0] == r[0] and res[1] == r[1]) for r in CameraController.MODES):
+            print(fmt_res % tuple(str_res))
             parser.error("Invalid resolution provided.")
     elif args.close:
         action = close_camera
@@ -154,6 +140,7 @@ def main():
     rospy.init_node('rsdk_camera_control')
     action(camera, res)
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())

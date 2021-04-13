@@ -27,7 +27,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-
 import argparse
 import os
 import sys
@@ -56,10 +55,11 @@ class CalibrateArm(baxter_interface.RobustController):
         # Initialize RobustController, use 10 minute timeout for the
         # CalibrateArm process
         super(CalibrateArm, self).__init__(
-            'robustcontroller/%s/CalibrateArm' % (limb,),
+            'robustcontroller/%s/CalibrateArm' % (limb, ),
             enable_msg,
             disable_msg,
-            10 * 60)
+            10 * 60,
+        )
 
 
 def gripper_removed(side):
@@ -68,8 +68,7 @@ def gripper_removed(side):
     """
     gripper = baxter_interface.Gripper(side)
     if gripper.type() != 'custom':
-        rospy.logerr("Cannot calibrate with grippers attached."
-                       " Remove grippers before calibration!")
+        rospy.logerr("Cannot calibrate with grippers attached." " Remove grippers before calibration!")
         return False
     return True
 
@@ -77,18 +76,15 @@ def gripper_removed(side):
 def main():
     parser = argparse.ArgumentParser()
     required = parser.add_argument_group('required arguments')
-    required.add_argument('-l', '--limb', required=True,
-                        choices=['left', 'right'],
-                        help="Calibrate the specified arm")
+    required.add_argument('-l', '--limb', required=True, choices=['left', 'right'], help="Calibrate the specified arm")
     args = parser.parse_args(rospy.myargv()[1:])
     arm = args.limb
 
     print("Initializing node...")
-    rospy.init_node('rsdk_calibrate_arm_%s' % (arm,))
+    rospy.init_node('rsdk_calibrate_arm_%s' % (arm, ))
 
     print("Preparing to calibrate...")
-    gripper_warn = ("\nIMPORTANT: Make sure to remove grippers and other"
-                    " attachments before running calibrate.\n")
+    gripper_warn = ("\nIMPORTANT: Make sure to remove grippers and other" " attachments before running calibrate.\n")
     print(gripper_warn)
     if not gripper_removed(args.limb):
         return 1
@@ -96,12 +92,12 @@ def main():
     rs = baxter_interface.RobotEnable(CHECK_VERSION)
     rs.enable()
     cat = CalibrateArm(arm)
-    rospy.loginfo("Running calibrate on %s arm" % (arm,))
+    rospy.loginfo("Running calibrate on %s arm" % (arm, ))
 
     error = None
     try:
         cat.run()
-    except Exception, e:
+    except Exception as e:
         error = e.strerror
     finally:
         try:
@@ -112,9 +108,10 @@ def main():
     if error == None:
         rospy.loginfo("Calibrate arm finished")
     else:
-        rospy.logerr("Calibrate arm failed: %s" % (error,))
+        rospy.logerr("Calibrate arm failed: %s" % (error, ))
 
     return 0 if error == None else 1
+
 
 if __name__ == '__main__':
     sys.exit(main())

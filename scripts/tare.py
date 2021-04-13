@@ -27,7 +27,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-
 import argparse
 import os
 import sys
@@ -56,11 +55,7 @@ class Tare(baxter_interface.RobustController):
 
         # Initialize RobustController, use 5 minute timeout for the Tare
         # process.
-        super(Tare, self).__init__(
-            'robustcontroller/%s/Tare' % (limb,),
-            enable_msg,
-            disable_msg,
-            5 * 60)
+        super(Tare, self).__init__('robustcontroller/%s/Tare' % (limb, ), enable_msg, disable_msg, 5 * 60)
 
 
 def gripper_removed(side):
@@ -69,8 +64,7 @@ def gripper_removed(side):
     """
     gripper = baxter_interface.Gripper(side)
     if gripper.type() != 'custom':
-        rospy.logerr("Cannot tare with grippers attached."
-                       " Remove grippers before tare!")
+        rospy.logerr("Cannot tare with grippers attached." " Remove grippers before tare!")
         return False
     return True
 
@@ -78,18 +72,15 @@ def gripper_removed(side):
 def main():
     parser = argparse.ArgumentParser()
     required = parser.add_argument_group('required arguments')
-    required.add_argument('-l', '--limb', required=True,
-                        choices=['left', 'right'],
-                        help='Tare the specified limb')
+    required.add_argument('-l', '--limb', required=True, choices=['left', 'right'], help='Tare the specified limb')
     args = parser.parse_args(rospy.myargv()[1:])
     limb = args.limb
 
     print("Initializing node...")
-    rospy.init_node('rsdk_tare_%s' % (limb,))
+    rospy.init_node('rsdk_tare_%s' % (limb, ))
 
     print("Preparing to tare...")
-    gripper_warn = ("\nIMPORTANT: Make sure to remove grippers and other"
-                    " attachments before running tare.\n")
+    gripper_warn = ("\nIMPORTANT: Make sure to remove grippers and other" " attachments before running tare.\n")
     print(gripper_warn)
     if not gripper_removed(args.limb):
         return 1
@@ -97,12 +88,12 @@ def main():
     rs = baxter_interface.RobotEnable(CHECK_VERSION)
     rs.enable()
     tt = Tare(limb)
-    rospy.loginfo("Running tare on %s limb" % (limb,))
+    rospy.loginfo("Running tare on %s limb" % (limb, ))
 
     error = None
     try:
         tt.run()
-    except Exception, e:
+    except Exception as e:
         error = e.strerror
     finally:
         try:
@@ -113,9 +104,10 @@ def main():
     if error == None:
         rospy.loginfo("Tare finished")
     else:
-        rospy.logerr("Tare failed: %s" % (error,))
+        rospy.logerr("Tare failed: %s" % (error, ))
 
     return 0 if error == None else 1
+
 
 if __name__ == '__main__':
     sys.exit(main())

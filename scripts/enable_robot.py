@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 # Copyright (c) 2013-2015, Rethink Robotics
 # All rights reserved.
@@ -40,21 +40,17 @@ from baxter_interface import CHECK_VERSION
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--state', const='state',
-                        dest='actions', action='append_const',
-                        help='Print current robot state')
-    parser.add_argument('-e', '--enable', const='enable',
-                        dest='actions', action='append_const',
-                        help='Enable the robot')
-    parser.add_argument('-d', '--disable', const='disable',
-                        dest='actions', action='append_const',
-                        help='Disable the robot')
-    parser.add_argument('-r', '--reset', const='reset',
-                        dest='actions', action='append_const',
-                        help='Reset the robot')
-    parser.add_argument('-S', '--stop', const='stop',
-                        dest='actions', action='append_const',
-                        help='Stop the robot')
+    parser.add_argument(
+        '-s', '--state', const='state', dest='actions', action='append_const', help='Print current robot state'
+    )
+    parser.add_argument(
+        '-e', '--enable', const='enable', dest='actions', action='append_const', help='Enable the robot'
+    )
+    parser.add_argument(
+        '-d', '--disable', const='disable', dest='actions', action='append_const', help='Disable the robot'
+    )
+    parser.add_argument('-r', '--reset', const='reset', dest='actions', action='append_const', help='Reset the robot')
+    parser.add_argument('-S', '--stop', const='stop', dest='actions', action='append_const', help='Stop the robot')
     args = parser.parse_args(rospy.myargv()[1:])
 
     if args.actions == None:
@@ -67,7 +63,7 @@ def main():
     try:
         for act in args.actions:
             if act == 'state':
-                print rs.state()
+                print(rs.state())
             elif act == 'enable':
                 rs.enable()
             elif act == 'disable':
@@ -76,10 +72,11 @@ def main():
                 rs.reset()
             elif act == 'stop':
                 rs.stop()
-    except Exception, e:
+    except Exception as e:
         rospy.logerr(e.strerror)
 
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -59,30 +59,16 @@ class Updater(object):
         self._status = UpdateStatus()
         self._avail_updates = UpdateSources()
 
-        self._update_sources = rospy.Subscriber(
-            '/usb/update_sources',
-            UpdateSources,
-            self._on_update_sources)
+        self._update_sources = rospy.Subscriber('/usb/update_sources', UpdateSources, self._on_update_sources)
 
-        self._updater_status_sub = rospy.Subscriber(
-            '/updater/status',
-            UpdateStatus,
-            self._on_update_status)
+        self._updater_status_sub = rospy.Subscriber('/updater/status', UpdateStatus, self._on_update_status)
 
-        self._updater_start = rospy.Publisher(
-            '/updater/start',
-            std_msgs.msg.String,
-            queue_size=10)
+        self._updater_start = rospy.Publisher('/updater/start', std_msgs.msg.String, queue_size=10)
 
-        self._updater_stop = rospy.Publisher(
-            '/updater/stop',
-            std_msgs.msg.Empty,
-            queue_size=10)
+        self._updater_stop = rospy.Publisher('/updater/stop', std_msgs.msg.Empty, queue_size=10)
 
         baxter_dataflow.wait_for(
-            lambda: self._avail_updates.uuid != '',
-            timeout=5.0,
-            timeout_msg="Failed to get list of available updates"
+            lambda: self._avail_updates.uuid != '', timeout=5.0, timeout_msg="Failed to get list of available updates"
         )
 
     def _on_update_sources(self, msg):
@@ -107,7 +93,7 @@ class Updater(object):
         @param uuid: uuid of the update to start.
         """
         if not any([u.uuid == uuid for u in self._avail_updates.sources]):
-            raise OSError(errno.EINVAL, "Invalid update uuid '%s'" % (uuid,))
+            raise OSError(errno.EINVAL, "Invalid update uuid '%s'" % (uuid, ))
 
         self._updater_start.publish(std_msgs.msg.String(uuid))
 
@@ -138,47 +124,46 @@ def run_update(updater, uuid):
         if msg.status == UpdateStatus.STS_IDLE:
             nl.done = True
         elif msg.status == UpdateStatus.STS_INVALID:
-            print ("Invalid update uuid, '%s'." % (uuid,))
+            print("Invalid update uuid, '%s'." % (uuid, ))
             nl.done = True
         elif msg.status == UpdateStatus.STS_BUSY:
-            print ("Update already in progress (may be shutting down).")
+            print("Update already in progress (may be shutting down).")
             nl.done = True
         elif msg.status == UpdateStatus.STS_CANCELLED:
-            print ("Update cancelled.")
+            print("Update cancelled.")
             nl.done = True
         elif msg.status == UpdateStatus.STS_ERR:
-            print ("Update failed: %s." % (msg.long_description,))
+            print("Update failed: %s." % (msg.long_description, ))
             nl.done = True
             nl.rc = 1
         elif msg.status == UpdateStatus.STS_LOAD_KEXEC:
-            print ("Robot will now reboot to finish updating...")
+            print("Robot will now reboot to finish updating...")
             nl.rc = 0
         else:
-            print ("Updater:  %s" % (msg.long_description))
+            print("Updater:  %s" % (msg.long_description))
 
     def on_shutdown():
         updater.stop_update()
+
     rospy.on_shutdown(on_shutdown)
 
     updater.status_changed.connect(on_update_status)
 
     try:
         updater.command_update(uuid)
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.EINVAL:
-            print e.strerror
+            print(e.strerror)
             return 1
         raise
 
     try:
         baxter_dataflow.wait_for(
-            lambda: nl.done == True,
-            timeout=5 * 60,
-            timeout_msg="Timeout waiting for update to succeed"
+            lambda: nl.done == True, timeout=5 * 60, timeout_msg="Timeout waiting for update to succeed"
         )
-    except Exception, e:
+    except Exception as e:
         if not (hasattr(e, 'errno') and e.errno == errno.ESHUTDOWN):
-            print e.strerror
+            print(e.strerror)
         nl.rc = 1
 
     return nl.rc
@@ -199,39 +184,41 @@ def ros_updateable_version():
         pattern = ("^([0-9]+)\.([0-9]+)\.([0-9]+)")
         match = re.search(pattern, robot_version)
         if not match:
-            rospy.logwarn("RobotUpdater: Invalid robot version: %s",
-                          robot_version)
+            rospy.logwarn("RobotUpdater: Invalid robot version: %s", robot_version)
             return None
         return match.string[match.start(1):match.end(3)]
 
     robot_version = get_robot_version()
     if not robot_version:
-        rospy.logerr("RobotUpdater: Failed to retrieve robot version "
-                     "from rosparam: %s\n"
-                     "Verify robot state and connectivity "
-                     "(i.e. ROS_MASTER_URI)", param_name)
+        rospy.logerr(
+            "RobotUpdater: Failed to retrieve robot version "
+            "from rosparam: %s\n"
+            "Verify robot state and connectivity "
+            "(i.e. ROS_MASTER_URI)", param_name
+        )
         ros_updateable = False
     else:
         v_list = robot_version.split('.')
         # If Version >= 1.1, SSH required
-        if ((float(v_list[0]) > 1) or
-           (float(v_list[0]) == 1 and float(v_list[1]) >= 1)):
-            errstr_version = ("RobotUpdater: Your Baxter's software "
-                              "version is (%s).\nFor robots with software "
-                              "1.1.0 and newer, software updates must be run "
-                              "by SSH'ing into the robot\n"
-                              "or by switching to Baxter's Display TTY1 with "
-                              "a keyboard. Be sure to insert a USB flash "
-                              "drive\ncontaining the update. "
-                              "After logging into the robot, run:\n"
-                              "  ruser@baxter ~ $ rethink-updater --list\n"
-                              "  Version\n"
-                              "  some.version.num.ber\n"
-                              "  ruser@baxter ~ $ rethink-updater --update "
-                              "some.version.num.ber\n"
-                              "Please see "
-                              "http://sdk.rethinkrobotics.com/wiki/SSH_Update "
-                              "for a detailed tutorial on updating.")
+        if ((float(v_list[0]) > 1) or (float(v_list[0]) == 1 and float(v_list[1]) >= 1)):
+            errstr_version = (
+                "RobotUpdater: Your Baxter's software "
+                "version is (%s).\nFor robots with software "
+                "1.1.0 and newer, software updates must be run "
+                "by SSH'ing into the robot\n"
+                "or by switching to Baxter's Display TTY1 with "
+                "a keyboard. Be sure to insert a USB flash "
+                "drive\ncontaining the update. "
+                "After logging into the robot, run:\n"
+                "  ruser@baxter ~ $ rethink-updater --list\n"
+                "  Version\n"
+                "  some.version.num.ber\n"
+                "  ruser@baxter ~ $ rethink-updater --update "
+                "some.version.num.ber\n"
+                "Please see "
+                "http://sdk.rethinkrobotics.com/wiki/SSH_Update "
+                "for a detailed tutorial on updating."
+            )
             rospy.logerr(errstr_version, robot_version)
             ros_updateable = False
     return ros_updateable
@@ -241,11 +228,16 @@ def main():
     description = "Legacy Robot Updater Script for versions 1.0.0 and earlier."
     parser = argparse.ArgumentParser(description=description)
     required = parser.add_mutually_exclusive_group()
-    required.add_argument('-l', '--list', action='store_const',
-                          dest='cmd', const='list', default='update',
-                          help="List available updates and UUID's")
-    required.add_argument('-u', '--update', dest='uuid', default='',
-                          help='Launch the given update')
+    required.add_argument(
+        '-l',
+        '--list',
+        action='store_const',
+        dest='cmd',
+        const='list',
+        default='update',
+        help="List available updates and UUID's"
+    )
+    required.add_argument('-u', '--update', dest='uuid', default='', help='Launch the given update')
     args = parser.parse_args(rospy.myargv()[1:])
     cmd = args.cmd
     uuid = args.uuid
@@ -258,24 +250,27 @@ def main():
     if cmd == 'list':
         updates = updater.list()
         if not len(updates):
-            print ("No available updates")
+            print("No available updates")
         else:
-            print ("%-30s%s" % ("Version", "UUID"))
+            print("%-30s%s" % ("Version", "UUID"))
             for update in updates:
                 print("%-30s%s" % (update[0], update[1]))
         return 0
     elif cmd == 'update':
         if uuid == '':
-            print "Error:  no update uuid specified"
+            print("Error:  no update uuid specified")
             return 1
-        msg = ("NOTE: Please plug in any Rethink Electric Parallel Grippers\n"
-               "      into the robot now, so that the Gripper Firmware\n"
-               "      can be automatically upgraded with the robot.\n")
-        print (msg)
+        msg = (
+            "NOTE: Please plug in any Rethink Electric Parallel Grippers\n"
+            "      into the robot now, so that the Gripper Firmware\n"
+            "      can be automatically upgraded with the robot.\n"
+        )
+        print(msg)
         raw_input("Press <Enter> to Continue...")
         if rospy.is_shutdown():
             return 0
         return run_update(updater, uuid)
+
 
 if __name__ == '__main__':
     sys.exit(main())
